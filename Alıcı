@@ -1,0 +1,72 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#include <Servo.h>
+Servo servoy;
+RF24 radio(9, 10); // CSN, CE
+const byte address[6] = "00001";
+int x_pos;//Motor devir bilgisi
+int y_pos;//Dümen bilgisi
+bool buton;// Motor devir kilit
+bool puruva_sag;
+bool puruva_sol;
+bool korna;
+bool isik;
+int gaz = 6; //Motor devri
+int servo_piny = 5;//Dümen servo açısı
+int puruva_sagPin = 2;
+int puruva_solPin = 4;
+int kornaPin = 8;
+int isikPin = 3;
+
+
+int joystick[7];
+
+
+void setup() {
+  Serial.begin(9600);
+  radio.begin();
+  servoy.attach (servo_piny ) ;
+  radio.openReadingPipe(1, address);
+  radio.setPALevel(RF24_PA_MIN);
+  radio.startListening();
+}
+
+void loop() {
+  if (radio.available()) {
+    radio.read(joystick, sizeof(joystick));
+    x_pos = joystick[0];
+    y_pos = joystick[1];
+    buton = joystick[2];
+    puruva_sag = joystick[3];
+    puruva_sol = joystick[4];
+    korna = joystick[5];
+    isik = joystick[6];
+
+    
+    Serial.println(x_pos);
+    Serial.println(y_pos);
+    Serial.println(not buton);
+    Serial.println(not puruva_sag);
+    Serial.println(not puruva_sol);
+    Serial.println(not korna);
+    Serial.println(not isik);
+
+    y_pos = map(y_pos, 0, 1023, 180, 0);
+    x_pos = map(x_pos, 0, 1023, 0, 255);
+    //if (buton>0)
+    //{
+    //digitalWrite (7,LOW);
+    //}
+    //else{
+    analogWrite (gaz,x_pos ) ;
+    digitalWrite (7,not buton);
+    servoy.write (y_pos) ;
+    digitalWrite (puruva_sagPin,not puruva_sag);
+    digitalWrite (puruva_solPin,not puruva_sol);
+    digitalWrite (kornaPin,not korna);
+    digitalWrite (isikPin,not isik);
+
+    //}
+  }
+ }
